@@ -55,7 +55,8 @@ public:
 
   enum {
     BAR,
-    LINE
+    LINE,
+    WEDGE
     };
 
   static vtkMark* CreateMark(int type);
@@ -120,7 +121,8 @@ public:
 
   virtual void DataChanged();
   virtual int GetType();
-
+  
+  
 //BTX
 protected:
   vtkMark();
@@ -146,6 +148,8 @@ protected:
   vtkIdType ParentDataIndex;
   vtkIdType Index;
 
+  vtkInformation *Fields;
+  
 private:
   vtkMark(const vtkMark &); // Not implemented.
   void operator=(const vtkMark &);   // Not implemented.

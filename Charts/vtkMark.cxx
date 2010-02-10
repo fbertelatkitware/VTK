@@ -34,6 +34,7 @@ vtkStandardNewMacro(vtkMark);
 //-----------------------------------------------------------------------------
 vtkMark::vtkMark()
 {
+  this->Field=new vtkInformation::New();
   this->Parent = NULL;
   this->Index = 0;
   this->ParentMarkIndex = 0;
@@ -43,6 +44,7 @@ vtkMark::vtkMark()
 //-----------------------------------------------------------------------------
 vtkMark::~vtkMark()
 {
+  this->Field->Delete();
 }
 
 //-----------------------------------------------------------------------------
