@@ -1,3 +1,18 @@
+/*=========================================================================
+
+  Program:   Visualization Toolkit
+  Module:    $RCSfile$
+
+  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+  All rights reserved.
+  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
+
+     This software is distributed WITHOUT ANY WARRANTY; without even
+     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+     PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #include "vtkBarMark.h"
 #include "vtkContextScene.h"
 #include "vtkContextView.h"
@@ -13,11 +28,6 @@
 
 namespace
 {
-  double PanelLeftFunction(vtkMark* m, vtkDataElement& vtkNotUsed(d))
-  {
-    return 20 + m->GetIndex()*15;
-  }
-
   vtkDataElement DataFunction(vtkMark* vtkNotUsed(m), vtkDataElement& d)
   {
     return d;
@@ -40,7 +50,7 @@ int TestMarks(int argc, char* argv[])
   vtkSmartPointer<vtkContextView> view = vtkSmartPointer<vtkContextView>::New();
   view->GetRenderer()->SetBackground(1.0, 1.0, 1.0);
   view->GetRenderWindow()->SetSize(400, 400);
-
+  view->GetRenderWindow()->SetMultiSamples(0);
   vtkSmartPointer<vtkTable> t = vtkSmartPointer<vtkTable>::New();
   vtkSmartPointer<vtkDoubleArray> arr1 = vtkSmartPointer<vtkDoubleArray>::New();
   arr1->SetName("Array1");
@@ -64,7 +74,6 @@ int TestMarks(int argc, char* argv[])
   vtkSmartPointer<vtkPanelMark> panel = vtkSmartPointer<vtkPanelMark>::New();
   view->GetScene()->AddItem(panel);
   panel->SetData(data);
-  //panel->SetLeft(PanelLeftFunction);
   panel->SetLeft(2);
   panel->SetBottom(2);
 

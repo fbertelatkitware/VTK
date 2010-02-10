@@ -54,10 +54,13 @@ SET_SOURCE_FILES_PROPERTIES(
   )
 
 SET_SOURCE_FILES_PROPERTIES(
+  vtkBarMark
   vtkDataElement
   vtkDataValue
+  vtkLineMark
   vtkMark
   vtkMarkUtil
+  vtkPanelMark
   vtkValueHolder
   WRAP_EXCLUDE
 )

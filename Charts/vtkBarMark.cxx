@@ -62,8 +62,14 @@ bool vtkBarMark::Paint(vtkContext2D *painter)
   vtkIdType numChildren = this->Data.GetData(this).GetNumberOfChildren();
   for (vtkIdType i = 0; i < numChildren; ++i)
     {
-    painter->GetBrush()->SetColor(ConvertColor(fillColor[i].Red), ConvertColor(fillColor[i].Green), ConvertColor(fillColor[i].Blue), ConvertColor(fillColor[i].Alpha));
-    painter->GetPen()->SetColor(ConvertColor(lineColor[i].Red), ConvertColor(lineColor[i].Green), ConvertColor(lineColor[i].Blue), ConvertColor(lineColor[i].Alpha));
+    painter->GetBrush()->SetColor(ConvertColor(fillColor[i].Red),
+                                  ConvertColor(fillColor[i].Green),
+                                  ConvertColor(fillColor[i].Blue),
+                                  ConvertColor(fillColor[i].Alpha));
+    painter->GetPen()->SetColor(ConvertColor(lineColor[i].Red),
+                                ConvertColor(lineColor[i].Green),
+                                ConvertColor(lineColor[i].Blue),
+                                ConvertColor(lineColor[i].Alpha));
     if (lineWidth[i] > 0.0)
       {
       painter->GetPen()->SetWidth(lineWidth[i]);
