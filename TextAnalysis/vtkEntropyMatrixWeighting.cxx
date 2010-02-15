@@ -25,7 +25,7 @@
 #include "vtkInformationVector.h"
 #include "vtkObjectFactory.h"
 #include "vtkSmartPointer.h"
-#include "vtkFrequencyMatrixWeighting.h"
+#include "vtkEntropyMatrixWeighting.h"
 
 #include <vtkstd/stdexcept>
 
@@ -39,29 +39,27 @@ static inline double log2(double n)
 #endif // WIN32
 
 ///////////////////////////////////////////////////////////////////////////////
-// vtkFrequencyMatrixWeighting
+// vtkEntropyMatrixWeighting
 
-vtkCxxRevisionMacro(vtkFrequencyMatrixWeighting, "$Revision$");
-vtkStandardNewMacro(vtkFrequencyMatrixWeighting);
+vtkCxxRevisionMacro(vtkEntropyMatrixWeighting, "$Revision$");
+vtkStandardNewMacro(vtkEntropyMatrixWeighting);
 
-vtkFrequencyMatrixWeighting::vtkFrequencyMatrixWeighting() :
-  FeatureDimension(0),
-  WeightType(ENTROPY)
+vtkEntropyMatrixWeighting::vtkEntropyMatrixWeighting() :
+  FeatureDimension(0)
 {
 }
 
-vtkFrequencyMatrixWeighting::~vtkFrequencyMatrixWeighting()
+vtkEntropyMatrixWeighting::~vtkEntropyMatrixWeighting()
 {
 }
 
-void vtkFrequencyMatrixWeighting::PrintSelf(ostream& os, vtkIndent indent)
+void vtkEntropyMatrixWeighting::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
   os << indent << "FeatureDimension: " << this->FeatureDimension << endl;
-  os << indent << "WeightType: " << this->WeightType << endl;
 }
 
-int vtkFrequencyMatrixWeighting::RequestData(
+int vtkEntropyMatrixWeighting::RequestData(
   vtkInformation*, 
   vtkInformationVector** inputVector, 
   vtkInformationVector* outputVector)
@@ -110,47 +108,39 @@ int vtkFrequencyMatrixWeighting::RequestData(
     output_array->Delete();
 
     // Make it happen ...
-    switch(this->WeightType)
+    output_array->SetName("entropy_weight");
+
+    // Cache log2( number of documents ) ...
+    const double logN = log2(static_cast<double>(object_count));
+
+    // Cache the frequency of each feature across the entire corpus ...
+    vtkstd::vector<double> Fi(feature_count, 0);
+    vtkArrayCoordinates coordinates;
+    const vtkIdType non_null_count = input_array->GetNonNullSize();
+    for(vtkIdType n = 0; n != non_null_count; ++n)
       {
-      case ENTROPY:
-        {
-        output_array->SetName("entropy_weight");
-
-        // Cache log2( number of documents ) ...
-        const double logN = log2(static_cast<double>(object_count));
-
-        // Cache the frequency of each feature across the entire corpus ...
-        vtkstd::vector<double> Fi(feature_count, 0);
-        vtkArrayCoordinates coordinates;
-        const vtkIdType non_null_count = input_array->GetNonNullSize();
-        for(vtkIdType n = 0; n != non_null_count; ++n)
-          {
-          input_array->GetCoordinatesN(n, coordinates);
-          const vtkIdType i = coordinates[feature_dimension];
-          const double fij = input_array->GetValueN(n);
-          Fi[i] += fij;
-          }
-
-        // Compute weights ...
-        for(vtkIdType n = 0; n != non_null_count; ++n)
-          {
-          input_array->GetCoordinatesN(n, coordinates);
-          const vtkIdType i = coordinates[feature_dimension];
-          const double fij = input_array->GetValueN(n);
-          const double pij = fij / Fi[i];
-          output_array->SetValue(i, output_array->GetValue(i) + (pij * log2(pij) / logN));
-          }
-
-        // Add 1 to each weight ...
-        for(vtkIdType i = 0; i != feature_count; ++i)
-          {
-          output_array->SetValue(i, output_array->GetValue(i) + 1);
-          }
-        break;
-        }
-      default:
-        throw vtkstd::runtime_error("Unknown WeightType.");
+      input_array->GetCoordinatesN(n, coordinates);
+      const vtkIdType i = coordinates[feature_dimension];
+      const double fij = input_array->GetValueN(n);
+      Fi[i] += fij;
       }
+
+    // Compute weights ...
+    for(vtkIdType n = 0; n != non_null_count; ++n)
+      {
+      input_array->GetCoordinatesN(n, coordinates);
+      const vtkIdType i = coordinates[feature_dimension];
+      const double fij = input_array->GetValueN(n);
+      const double pij = fij / Fi[i];
+      output_array->SetValue(i, output_array->GetValue(i) + (pij * log2(pij) / logN));
+      }
+
+    // Add 1 to each weight ...
+    for(vtkIdType i = 0; i != feature_count; ++i)
+      {
+      output_array->SetValue(i, output_array->GetValue(i) + 1);
+      }
+
     }
   catch(vtkstd::exception& e)
     {

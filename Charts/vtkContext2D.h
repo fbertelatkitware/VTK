@@ -161,10 +161,28 @@ public:
   void DrawString(vtkPoints2D *point, const char *string);
   void DrawString(float x, float y, const char *string);
 
+//BTX
   // Description:
-  // Get/Set the pen which controls the outlines of shapes as well as lines,
-  // points and related primitives.
-  void SetPen(vtkPen *pen);
+  // Compute the bounds of the supplied string. The bounds will be copied to the
+  // supplied bounds variable, the first two elements are the bottom corner of
+  // the string, and the second two elements are the width and height of the
+  // bounding box.
+  // NOTE: This function does not take account of the text rotation.
+  void ComputeStringBounds(const vtkStdString &string, vtkPoints2D *bounds);
+  void ComputeStringBounds(const vtkStdString &string, float bounds[4]);
+//ETX
+  void ComputeStringBounds(const char *string, float bounds[4]);
+
+  // Description:
+  // Apply the supplied pen which controls the outlines of shapes, as well as
+  // lines, points and related primitives. This makes a deep copy of the vtkPen
+  // object in the vtkContext, it does not hold a pointer to the supplied object.
+  void ApplyPen(vtkPen *pen);
+
+  // Description:
+  // Get the pen which controls the outlines of shapes, as well as lines,
+  // points and related primitives. This object can be modified and the changes
+  // will be reflected in subsequent drawing operations.
   vtkGetObjectMacro(Pen, vtkPen);
 
   // Description:

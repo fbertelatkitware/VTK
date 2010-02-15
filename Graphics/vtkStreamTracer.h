@@ -177,6 +177,16 @@ public:
     {this->SetIntegratorType(RUNGE_KUTTA4);};
   void SetIntegratorTypeToRungeKutta45()
     {this->SetIntegratorType(RUNGE_KUTTA45);};
+    
+  // Description:
+  // Set the velocity field interpolator type to the one involving
+  // a dataset point locator.
+  void SetInterpolatorTypeToDataSetPointLocator();
+  
+  // Description:
+  // Set the velocity field interpolator type to the one involving
+  // a cell locator.
+  void SetInterpolatorTypeToCellLocator();
 
   // Description:
   // Specify the maximum length of a streamline expressed in LENGTH_UNIT.
@@ -230,7 +240,7 @@ public:
   // Specify the terminal speed value, below which integration is terminated.
   vtkSetMacro(TerminalSpeed, double);
   vtkGetMacro(TerminalSpeed, double);
-
+  
 //BTX
   enum
   {

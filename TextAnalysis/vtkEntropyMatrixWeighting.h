@@ -19,22 +19,28 @@
 
 =========================================================================*/
 
-// .NAME vtkFrequencyMatrixWeighting - computes a weighting vector for an input matrix.
-
+// .NAME vtkEntropyMatrixWeighting - Term weight strategy where every term has weight related to its entropy
+//
+// .SECTION Description
+//
+// This filter assigns to all terms weight between 0 and 1 where 1
+// indicates maximum information content and 0 indicates a term that
+// may safely be used to line the birdcage.
+//
 // .SECTION Thanks
 // Developed by Timothy M. Shead (tshead@sandia.gov) at Sandia National Laboratories.
 
-#ifndef __vtkFrequencyMatrixWeighting_h
-#define __vtkFrequencyMatrixWeighting_h
+#ifndef __vtkEntropyMatrixWeighting_h
+#define __vtkEntropyMatrixWeighting_h
 
 #include <vtkArrayDataAlgorithm.h>
 
-class VTK_TEXT_ANALYSIS_EXPORT vtkFrequencyMatrixWeighting :
+class VTK_TEXT_ANALYSIS_EXPORT vtkEntropyMatrixWeighting :
   public vtkArrayDataAlgorithm
 {
 public:
-  static vtkFrequencyMatrixWeighting* New();
-  vtkTypeRevisionMacro(vtkFrequencyMatrixWeighting, vtkArrayDataAlgorithm);
+  static vtkEntropyMatrixWeighting* New();
+  vtkTypeRevisionMacro(vtkEntropyMatrixWeighting, vtkArrayDataAlgorithm);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
@@ -43,21 +49,9 @@ public:
   vtkSetMacro(FeatureDimension, int);
 
 //BTX
-  enum
-  {
-    ENTROPY = 0
-  };
-//ETX
-
-  // Description:
-  // Set the type of weighting vector to compute.  Default: ENTROPY
-  vtkGetMacro(WeightType, int);
-  vtkSetMacro(WeightType, int);
-
-//BTX
 protected:
-  vtkFrequencyMatrixWeighting();
-  ~vtkFrequencyMatrixWeighting();
+  vtkEntropyMatrixWeighting();
+  ~vtkEntropyMatrixWeighting();
 
   int RequestData(
     vtkInformation*, 
@@ -65,11 +59,10 @@ protected:
     vtkInformationVector*);
 
 private:
-  vtkFrequencyMatrixWeighting(const vtkFrequencyMatrixWeighting&); // Not implemented
-  void operator=(const vtkFrequencyMatrixWeighting&);   // Not implemented
+  vtkEntropyMatrixWeighting(const vtkEntropyMatrixWeighting&); // Not implemented
+  void operator=(const vtkEntropyMatrixWeighting&);   // Not implemented
 
   int FeatureDimension;
-  int WeightType;
 //ETX
 };
 

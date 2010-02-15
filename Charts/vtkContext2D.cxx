@@ -30,7 +30,6 @@
 #include <cassert>
 
 vtkCxxRevisionMacro(vtkContext2D, "$Revision$");
-vtkCxxSetObjectMacro(vtkContext2D, Pen, vtkPen);
 vtkCxxSetObjectMacro(vtkContext2D, Brush, vtkBrush);
 vtkCxxSetObjectMacro(vtkContext2D, TextProp, vtkTextProperty);
 
@@ -58,10 +57,14 @@ bool vtkContext2D::Begin(vtkContextDevice2D *device)
 //-----------------------------------------------------------------------------
 bool vtkContext2D::End()
 {
-  this->Device->End();
-  this->Device->Delete();
-  this->Device = NULL;
-  this->Modified();
+  if (this->Device)
+    {
+    this->Device->End();
+    this->Device->Delete();
+    this->Device = NULL;
+    this->Modified();
+    return true;
+    }
   return true;
 }
 
@@ -353,6 +356,34 @@ void vtkContext2D::DrawString(float x, float y, const char *string)
 }
 
 //-----------------------------------------------------------------------------
+void vtkContext2D::ComputeStringBounds(const vtkStdString &string,
+                                       vtkPoints2D *bounds)
+{
+  bounds->SetNumberOfPoints(2);
+  float *f = vtkFloatArray::SafeDownCast(bounds->GetData())->GetPointer(0);
+  this->ComputeStringBounds(string, f);
+}
+
+//-----------------------------------------------------------------------------
+void vtkContext2D::ComputeStringBounds(const vtkStdString &string,
+                                       float bounds[4])
+{
+  if (!this->Device)
+    {
+    vtkErrorMacro(<< "Attempted to paint with no active vtkContextDevice2D.");
+    return;
+    }
+  this->Device->ComputeStringBounds(string, this->TextProp, bounds);
+}
+
+//-----------------------------------------------------------------------------
+void vtkContext2D::ComputeStringBounds(const char *string, float bounds[4])
+{
+  vtkStdString str = string;
+  this->ComputeStringBounds(str, bounds);
+}
+
+//-----------------------------------------------------------------------------
 void vtkContext2D::DrawImage(float x, float y, vtkImageData *image)
 {
   float p[] = { x, y };
@@ -364,6 +395,12 @@ unsigned int vtkContext2D::AddPointSprite(vtkImageData *image)
 {
   this->Device->AddPointSprite(image);
   return 0;
+}
+
+//-----------------------------------------------------------------------------
+void vtkContext2D::ApplyPen(vtkPen *pen)
+{
+  this->Pen->DeepCopy(pen);
 }
 
 //-----------------------------------------------------------------------------
@@ -391,6 +428,7 @@ inline void vtkContext2D::ApplyPen()
   this->Device->SetColor4(this->Pen->GetColor());
   this->Device->SetLineWidth(this->Pen->GetWidth());
   this->Device->SetPointSize(this->Pen->GetWidth());
+  this->Device->SetLineType(this->Pen->GetLineType());
 }
 
 //-----------------------------------------------------------------------------

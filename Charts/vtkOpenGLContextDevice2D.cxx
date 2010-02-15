@@ -15,6 +15,13 @@
 
 #include "vtkOpenGLContextDevice2D.h"
 
+#ifdef VTK_USE_QT
+# include <QApplication>
+# include "vtkQtLabelRenderStrategy.h"
+#endif
+#include "vtkFreeTypeLabelRenderStrategy.h"
+
+#include "vtkPen.h"
 #include "vtkPoints2D.h"
 #include "vtkMatrix3x3.h"
 #include "vtkFloatArray.h"
@@ -34,11 +41,6 @@
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLExtensionManager.h"
 #include "vtkgl.h"
-
-#ifdef VTK_USE_QT
-  #include "vtkQtLabelRenderStrategy.h"
-#endif
-#include "vtkFreeTypeLabelRenderStrategy.h"
 
 #include "vtkObjectFactory.h"
 
@@ -77,7 +79,16 @@ vtkOpenGLContextDevice2D::vtkOpenGLContextDevice2D()
   this->Renderer = 0;
   this->IsTextDrawn = false;
 #ifdef VTK_USE_QT
-  this->TextRenderer = vtkQtLabelRenderStrategy::New();
+  // Can only use the QtLabelRenderStrategy if there is a QApplication
+  // instance, otherwise fallback to the FreeTypeLabelRenderStrategy.
+  if(QApplication::instance())
+    {
+    this->TextRenderer = vtkQtLabelRenderStrategy::New();
+    }
+  else
+    {
+    this->TextRenderer = vtkFreeTypeLabelRenderStrategy::New();
+    }
 #else
   this->TextRenderer = vtkFreeTypeLabelRenderStrategy::New();
 #endif
@@ -141,6 +152,7 @@ void vtkOpenGLContextDevice2D::End()
   if (this->IsTextDrawn)
     {
     this->TextRenderer->EndFrame();
+    this->IsTextDrawn = false;
     }
   this->TextRenderer->SetRenderer(0);
   // push a 2D matrix on the stack
@@ -354,6 +366,22 @@ void vtkOpenGLContextDevice2D::DrawString(float *point, vtkTextProperty *prop,
 }
 
 //-----------------------------------------------------------------------------
+void vtkOpenGLContextDevice2D::ComputeStringBounds(const vtkStdString &string,
+                                                   vtkTextProperty *prop,
+                                                   float bounds[4])
+{
+  double b[4];
+  this->TextRenderer->ComputeLabelBounds(prop, string, b);
+
+  // Go from the format used in the label render strategy (x1, x2, y1, y2)
+  // to the format specified by this function (x, y, w, h).
+  bounds[0] = static_cast<float>(b[0]);
+  bounds[1] = static_cast<float>(b[2]);
+  bounds[2] = static_cast<float>(b[1] - b[0]);
+  bounds[3] = static_cast<float>(b[3] - b[2]);
+}
+
+//-----------------------------------------------------------------------------
 void vtkOpenGLContextDevice2D::DrawImage(float *p, int, vtkImageData *image)
 {
   vtkTexture *tex =vtkTexture::New();
@@ -414,6 +442,41 @@ void vtkOpenGLContextDevice2D::SetPointSize(float size)
 void vtkOpenGLContextDevice2D::SetLineWidth(float width)
 {
   glLineWidth(width);
+}
+
+//-----------------------------------------------------------------------------
+void vtkOpenGLContextDevice2D::SetLineType(int type)
+{
+  if (type == vtkPen::SOLID_LINE)
+    {
+    glDisable(GL_LINE_STIPPLE);
+    }
+  else
+    {
+    glEnable(GL_LINE_STIPPLE);
+    }
+  GLushort pattern = 0x0000;
+  switch (type)
+    {
+    case vtkPen::NO_PEN:
+      pattern = 0x0000;
+      break;
+    case vtkPen::DASH_LINE:
+      pattern = 0x00FF;
+      break;
+    case vtkPen::DOT_LINE:
+      pattern = 0x0101;
+      break;
+    case vtkPen::DASH_DOT_LINE:
+      pattern = 0x0C0F;
+      break;
+    case vtkPen::DASH_DOT_DOT_LINE:
+      pattern = 0x1C47;
+      break;
+    default:
+      pattern = 0x0000;
+    }
+  glLineStipple(1, pattern);
 }
 
 //-----------------------------------------------------------------------------

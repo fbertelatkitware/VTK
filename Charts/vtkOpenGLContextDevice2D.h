@@ -75,11 +75,21 @@ public:
   // Draw some text to the screen!
   virtual void DrawString(float *point, vtkTextProperty *tprop,
                           const vtkStdString &string);
+
+  // Description:
+  // Compute the bounds of the supplied string. The bounds will be copied to the
+  // supplied bounds variable, the first two elements are the bottom corner of
+  // the string, and the second two elements are the width and height of the
+  // bounding box.
+  // NOTE: This function does not take account of the text rotation.
+  virtual void ComputeStringBounds(const vtkStdString &string,
+                                   vtkTextProperty *tprop,
+                                   float bounds[4]);
 //ETX
 
   // Description:
   // Draw the supplied image at the given x, y (p[0], p[1]) location(s) (bottom corner).
-  void DrawImage(float *p, int n, vtkImageData *image);
+  virtual void DrawImage(float *p, int n, vtkImageData *image);
 
   // Description:
   // Experimentation with point sprites
@@ -100,6 +110,10 @@ public:
   // Description:
   // Set the line width for glyphs/sprites.
   virtual void SetLineWidth(float width);
+
+  // Description:
+  // Set the line type type (using anonymous enum in vtkPen).
+  virtual void SetLineType(int type);
 
   // Description:
   // Set the model view matrix for the display

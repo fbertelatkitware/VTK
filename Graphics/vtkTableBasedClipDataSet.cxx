@@ -2022,9 +2022,9 @@ void vtkTableBasedClipDataSet::ClipImageData( vtkDataSet * inputGrd,
 {
   int                  i, j;
   int                  dataDims[3];
-  double               originPt[3];
   double               spacings[3];
   double               tmpValue = 0.0;
+  double             * dataBBox = NULL;
   vtkImageData       * volImage = NULL;
   vtkDoubleArray     * pxCoords = NULL;
   vtkDoubleArray     * pyCoords = NULL;
@@ -2033,8 +2033,8 @@ void vtkTableBasedClipDataSet::ClipImageData( vtkDataSet * inputGrd,
   
   volImage = vtkImageData::SafeDownCast( inputGrd );
   volImage->GetDimensions( dataDims );
-  volImage->GetOrigin( originPt );
   volImage->GetSpacing( spacings );
+  dataBBox = volImage->GetBounds();
   
   pxCoords = vtkDoubleArray::New();
   pyCoords = vtkDoubleArray::New();
@@ -2044,7 +2044,7 @@ void vtkTableBasedClipDataSet::ClipImageData( vtkDataSet * inputGrd,
     {
     tmpArays[j]->SetNumberOfComponents( 1 );
     tmpArays[j]->SetNumberOfTuples( dataDims[j] );
-    for ( tmpValue  = originPt[j], i = 0; i < dataDims[j]; i ++, 
+    for ( tmpValue  = dataBBox[ j << 1 ], i = 0; i < dataDims[j]; i ++, 
           tmpValue += spacings[j] )
       {
       tmpArays[j]->SetComponent( i, 0, tmpValue );
@@ -2071,6 +2071,7 @@ void vtkTableBasedClipDataSet::ClipImageData( vtkDataSet * inputGrd,
   pzCoords = NULL;
   rectGrid = NULL;
   volImage = NULL;
+  dataBBox = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -2622,7 +2623,7 @@ void vtkTableBasedClipDataSet::ClipRectilinearGridData( vtkDataSet * inputGrd,
                      (  theCellK + shiftLUT[2][ pt2Index ]  ) * pzStride
                  );
 
-          // We may have physically (though not logically) degenerate cells
+          /* We may have physically (though not logically) degenerate cells
           // if p1Weight == 0 or p1Weight == 1. We could pretty easily and 
           // mostly safely clamp percent to the range [1e-4, 1 - 1e-4].
           if( p1Weight == 1.0) 
@@ -2635,9 +2636,19 @@ void vtkTableBasedClipDataSet::ClipRectilinearGridData( vtkDataSet * inputGrd,
             shapeIds[p] = pntIndx2;
             }
           else
+          
             {
             shapeIds[p] = visItVFV->AddPoint( pntIndx1, pntIndx2, p1Weight );
             }
+          */
+          
+          // Turning on the above code segment, the alternative, would cause
+          // a bug with a synthetic Wavelet dataset (vtkImageData) when the
+          // the clipping plane (x/y/z axis) is positioned exactly at (0,0,0).
+          // The problem occurs in the form of an open 'box', as opposed to an
+          // expected closed one. This is due to the use of hash instead of a
+          // point-locator based detection of duplicate points.
+          shapeIds[p] = visItVFV->AddPoint( pntIndx1, pntIndx2, p1Weight );
           }
         else 
         if ( pntIndex >= N0 && pntIndex <= N3 )
