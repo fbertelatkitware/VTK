@@ -55,6 +55,7 @@ vtkDescriptiveStatistics::vtkDescriptiveStatistics()
   this->AssessParameters->SetNumberOfValues( 2 );
   this->AssessParameters->SetValue( 0, "Mean" );
   this->AssessParameters->SetValue( 1, "Standard Deviation" );
+  this->UnbiasedVariance = 1; // By default, use unbiased estimator of the variance (divided by cardinality-1)
   this->SignedDeviations = 0; // By default, use unsigned deviation (1D Mahlanobis distance)
 }
 
@@ -67,6 +68,7 @@ vtkDescriptiveStatistics::~vtkDescriptiveStatistics()
 void vtkDescriptiveStatistics::PrintSelf( ostream &os, vtkIndent indent )
 {
   this->Superclass::PrintSelf( os, indent );
+  os << indent << "UnbiasedVariance: " << this->UnbiasedVariance << "\n";
   os << indent << "SignedDeviations: " << this->SignedDeviations << "\n";
 }
 
@@ -412,10 +414,21 @@ void vtkDescriptiveStatistics::Derive( vtkDataObject* inMetaDO )
       double inv_n = 1. / n;
       double nm1 = n - 1.;
 
-      derivedVals[1] = mom2 / nm1;
+      // Variance
+      if ( this->UnbiasedVariance )
+        {
+        derivedVals[1] = mom2 / nm1;
+        }
+      else // use population variance
+        {
+        derivedVals[1] = mom2 * inv_n;
+        }
+
+      // Standard deviation
       derivedVals[0] = sqrt( derivedVals[1] );
 
-      double var_inv = 1. / derivedVals[1];
+      // Skeweness and kurtosis
+      double var_inv = nm1 / mom2;
       double nvar_inv = var_inv * inv_n;
       derivedVals[2] = nvar_inv * sqrt( var_inv ) * mom3;
       derivedVals[4] = nvar_inv * var_inv * mom4 - 3.;
