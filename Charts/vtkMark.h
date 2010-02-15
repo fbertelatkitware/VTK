@@ -30,6 +30,7 @@
 #include "vtkVariant.h"      // Needed
 
 class vtkPanelMark;
+class vtkInformation;
 
 class vtkColor
 {
@@ -122,6 +123,22 @@ public:
   virtual void DataChanged();
   virtual int GetType();
 
+  // For wedges.
+  void SetOuterRadius(vtkValue<double> v);
+  vtkValue<double>& GetOuterRadius();
+  
+  void SetInnerRadius(vtkValue<double> v);
+  vtkValue<double>& GetInnerRadius();
+  
+  void SetStartAngle(vtkValue<double> v);
+  vtkValue<double>& GetStartAngle();
+  
+  void SetStopAngle(vtkValue<double> v);
+  vtkValue<double>& GetStopAngle();
+  
+  void SetAngle(vtkValue<double> v);
+  vtkValue<double>& GetAngle();
+  
 //BTX
 protected:
   vtkMark();
@@ -141,7 +158,14 @@ protected:
   vtkValueHolder<double> LineWidth;
   vtkValueHolder<double> Width;
   vtkValueHolder<double> Height;
-
+  
+  // For Wedge
+  vtkValueHolder<double> OuterRadius;
+  vtkValueHolder<double> InnerRadius;
+  vtkValueHolder<double> StartAngle;
+  vtkValueHolder<double> StopAngle;
+  vtkValueHolder<double> Angle;
+  
   vtkPanelMark* Parent;
   vtkIdType ParentMarkIndex;
   vtkIdType ParentDataIndex;

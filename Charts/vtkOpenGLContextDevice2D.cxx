@@ -227,6 +227,118 @@ void vtkOpenGLContextDevice2D::DrawQuad(float *f, int n)
 }
 
 //-----------------------------------------------------------------------------
+void vtkOpenGLContextDevice2D::DrawEllipseWedge(float x, float y, float outRx,
+                                                float outRy, float inRx,
+                                                float inRy, float startAngle,
+                                                float stopAngle)
+
+{
+  assert("pre: positive_outRx" && outRx>=0.0f);
+  assert("pre: positive_outRy" && outRy>=0.0f);
+  assert("pre: positive_inRx" && inRx>=0.0f);
+  assert("pre: positive_inRy" && inRy>=0.0f);
+  assert("pre: ordered_rx" && inRx<=outRx);
+  assert("pre: ordered_ry" && inRy<=outRy);
+  
+  if(outRy==0.0f && outRx==0.0f)
+    {
+    // we make sure maxRadius will never be null.
+    return;
+    }
+  
+  // Raterize an ellipse
+  
+  // Fixed number of iteration.
+#if 0
+  const int iterations = 5; // minimum is 1.
+#else
+  // Number of iterations based on a maximum angle step
+  // so that the change is of at most `error' pixel.
+  
+  // 1.0: pixel precision. 0.5 (subpixel precision, useful with multisampling)
+  double error=4.0;
+  
+  // The tessellation is the most visible on the biggest radius.
+  double maxRadius;
+  if(outRx>=outRy)
+    {
+    maxRadius=outRx;
+    }
+  else
+    {
+    maxRadius=outRy;
+    }
+  
+  if(error>maxRadius)
+    {
+    error=0.5;
+    }
+  
+  // maximum step so that there is a change of at most `error' pixel on the
+  // X axis.
+  double step1=acos((maxRadius-error)/maxRadius);
+  
+  // maximum step so that there is a change of at most `error' pixel on the
+  // Y axis.
+  double step2=asin(error/maxRadius);
+  
+  // Keep the min of the two maximum steps.
+  if(step2<step1)
+    {
+    step1=step2;
+    }
+  
+  // ceil because we want to make sure we don't underestimate the number of
+  // iterations by 1.
+  int iterations=static_cast<int>(
+    ceil(vtkMath::RadiansFromDegrees(stopAngle-startAngle)/step1));
+#endif
+  
+  cout << "iterations=" << iterations << endl;
+  
+  float *p = new float[4*(iterations+1)];
+  
+  // step in radians.
+  double step =
+    vtkMath::RadiansFromDegrees(stopAngle-startAngle)/(iterations);
+#if 0
+  if(step>step1)
+    {
+    cout << "ERROR: step>step1 step=" << step<< " step1=" << step1 << endl;
+    }
+#endif
+  double rstart=vtkMath::RadiansFromDegrees(startAngle);
+  
+  // the A vertices (0,2,4,..) are on the inner side
+  // the B vertices (1,3,5,..) are on the outer side
+  // (A and B vertices terms come from triangle strip definition in
+  // OpenGL spec)
+  // we are iterating counterclockwise
+  
+  int i=0;
+  while(i<=iterations)
+    {
+    // A vertex (inner side)
+    double a=rstart+i*step;
+    p[4*i  ] = inRx * cos(a) + x;
+    p[4*i+1] = inRy * sin(a) + y;
+    
+    // B vertex (outer side)
+    p[4*i+2] = outRx * cos(a) + x;
+    p[4*i+3] = outRy * sin(a) + y;
+    
+    ++i;
+    }
+  
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(2, GL_FLOAT, 0, p);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 2*(iterations+1));
+  glDisableClientState(GL_VERTEX_ARRAY);
+  
+  delete[] p;
+}
+
+//-----------------------------------------------------------------------------
 void vtkOpenGLContextDevice2D::DrawString(float *point, vtkTextProperty *prop,
                                           const vtkStdString &string)
 {
