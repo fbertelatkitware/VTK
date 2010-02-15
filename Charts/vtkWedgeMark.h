@@ -142,8 +142,6 @@ public:
 protected:
   vtkWedgeMark();
   ~vtkWedgeMark();
-
-//  double Angle; // degrees
   
 private:
   vtkWedgeMark(const vtkWedgeMark &); // Not implemented.

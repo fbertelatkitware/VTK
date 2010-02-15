@@ -105,10 +105,7 @@ bool vtkWedgeMark::Paint(vtkContext2D *painter)
   for (vtkIdType i = 0; i < numChildren; ++i)
     {
     a0=a1;
-    cout << "angle="<<angle[i] <<  endl;
     a1=angle[i]+a0;
-    
-    cout << "a0=" << a0 <<", a1="<< a1<< endl;
     
     painter->GetBrush()->SetColorF(fillColor[i].Red,
                                    fillColor[i].Green,
